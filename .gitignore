@@ -1,0 +1,5 @@
+.idea
+/vendor
+/log
+
+/_build/dist
