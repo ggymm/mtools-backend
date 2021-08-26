@@ -5,12 +5,17 @@ import (
 )
 
 type GlobalConfig struct {
-	App appConfig
+	App   appConfig
+	Coder CoderConfig
 }
 
 type appConfig struct {
 	Addr             string
 	AllowCrossDomain bool `toml:"allow_cross_domain"`
+}
+
+type CoderConfig struct {
+	ConfigFolder string `toml:"config_folder"`
 }
 
 func InitConfig() (*GlobalConfig, error) {

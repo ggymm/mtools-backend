@@ -2,6 +2,7 @@ package main
 
 import (
 	"go.uber.org/zap"
+	"mtools-backend/handler"
 	"net/http"
 
 	"mtools-backend/middleware"
@@ -13,7 +14,9 @@ import (
 var RouterSet = wire.NewSet(wire.Struct(new(Router), "*"))
 
 type Router struct {
-	Logger *zap.SugaredLogger
+	Logger          *zap.SugaredLogger
+	ConfigHandler   *handler.ConfigHandler
+	DatabaseHandler *handler.DatabaseHandler
 }
 
 func (r *Router) NewRouter() (router *gin.Engine) {
@@ -28,7 +31,17 @@ func (r *Router) NewRouter() (router *gin.Engine) {
 	})
 	v1 := router.Group("/api/v1/")
 	{
-		println(v1)
+		// 配置文件功能
+		config := v1.Group("config/").Use(middleware.CheckUser())
+		{
+			config.GET("/", r.ConfigHandler.Get)
+		}
+
+		// 数据库功能
+		database := v1.Group("database/").Use(middleware.CheckUser())
+		{
+			database.GET("get-table-list", r.DatabaseHandler.GetTableList)
+		}
 	}
 
 	return

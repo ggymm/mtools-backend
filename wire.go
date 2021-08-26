@@ -5,6 +5,7 @@ package main
 
 import (
 	"mtools-backend/config"
+	"mtools-backend/handler"
 	"mtools-backend/logger"
 
 	"github.com/google/wire"
@@ -15,6 +16,7 @@ func BuildApp() (*App, func(), error) {
 	wire.Build(
 		logger.InitLogger,
 		config.InitConfig,
+		handler.SetHandler,
 		RouterSet,
 		AppSet,
 	)

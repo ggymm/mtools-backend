@@ -7,7 +7,12 @@ package main
 
 import (
 	"mtools-backend/config"
+	"mtools-backend/handler"
 	"mtools-backend/logger"
+)
+
+import (
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Injectors from wire.go:
@@ -18,13 +23,20 @@ func BuildApp() (*App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	router := &Router{
-		Logger: sugaredLogger,
-	}
+	configHandler := &handler.ConfigHandler{}
 	globalConfig, err := config.InitConfig()
 	if err != nil {
 		cleanup()
 		return nil, nil, err
+	}
+	databaseHandler := &handler.DatabaseHandler{
+		Logger: sugaredLogger,
+		Config: globalConfig,
+	}
+	router := &Router{
+		Logger:          sugaredLogger,
+		ConfigHandler:   configHandler,
+		DatabaseHandler: databaseHandler,
 	}
 	app := &App{
 		Router: router,
