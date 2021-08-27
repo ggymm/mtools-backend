@@ -30,8 +30,8 @@ type DatabaseConfig struct {
 }
 
 type table struct {
-	TableName    string         `db:"TABLE_NAME"`
-	TableComment sql.NullString `db:"TABLE_COMMENT"`
+	TableName    string         `json:"table_name" db:"TABLE_NAME"`
+	TableComment sql.NullString `json:"table_comment" db:"TABLE_COMMENT"`
 }
 
 func (h *DatabaseHandler) GetTableList(c *gin.Context) {
@@ -47,8 +47,9 @@ func (h *DatabaseHandler) GetTableList(c *gin.Context) {
 				continue
 			} else {
 				list = append(list, map[string]interface{}{
-					"DatabaseName": databaseConfig.Name,
-					"Tables":       tables,
+					"database_name": databaseConfig.Name,
+					"tables":        tables,
+					"open":          false,
 				})
 			}
 		}
@@ -68,8 +69,9 @@ func (h *DatabaseHandler) GetTableList(c *gin.Context) {
 			return
 		} else {
 			returnSuccess(c, map[string]interface{}{
-				"DatabaseName": selectedConfig.Name,
-				"Tables":       tables,
+				"database_name": selectedConfig.Name,
+				"tables":        tables,
+				"open":          false,
 			})
 			return
 		}
