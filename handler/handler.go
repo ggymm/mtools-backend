@@ -13,6 +13,7 @@ import (
 var SetHandler = wire.NewSet(
 	ConfigHandlerSet,
 	DatabaseHandlerSet,
+	CoderHandlerSet,
 )
 
 // ParseJSON 解析请求JSON

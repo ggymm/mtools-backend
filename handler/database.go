@@ -30,12 +30,20 @@ type DatabaseConfig struct {
 }
 
 type table struct {
-	TableName    string         `json:"table_name" db:"TABLE_NAME"`
-	TableComment sql.NullString `json:"table_comment" db:"TABLE_COMMENT"`
+	TableName    string         `json:"tableName" db:"TABLE_NAME"`
+	TableComment sql.NullString `json:"tableComment" db:"TABLE_COMMENT"`
+	Checked      bool           `json:"checked"`
+}
+
+func (h *DatabaseHandler) GetDatabaseList(c *gin.Context) {
+	list := make([]DatabaseConfig, 0)
+	utils.ReadJSON(filepath.Join(h.Config.Coder.ConfigFolder, "database_config.json"), &list)
+	returnSuccess(c, list)
+	return
 }
 
 func (h *DatabaseHandler) GetTableList(c *gin.Context) {
-	databaseId := c.GetString("databaseId")
+	databaseId := c.DefaultQuery("databaseId", "")
 	// 获取全部配置列表
 	configList := make([]DatabaseConfig, 0)
 	utils.ReadJSON(filepath.Join(h.Config.Coder.ConfigFolder, "database_config.json"), &configList)
@@ -47,9 +55,10 @@ func (h *DatabaseHandler) GetTableList(c *gin.Context) {
 				continue
 			} else {
 				list = append(list, map[string]interface{}{
-					"database_name": databaseConfig.Name,
-					"tables":        tables,
-					"open":          false,
+					"databaseId":   databaseConfig.Id,
+					"databaseName": databaseConfig.Name,
+					"tables":       tables,
+					"open":         false,
 				})
 			}
 		}
@@ -68,11 +77,7 @@ func (h *DatabaseHandler) GetTableList(c *gin.Context) {
 			returnFailed(c, err)
 			return
 		} else {
-			returnSuccess(c, map[string]interface{}{
-				"database_name": selectedConfig.Name,
-				"tables":        tables,
-				"open":          false,
-			})
+			returnSuccess(c, tables)
 			return
 		}
 	}

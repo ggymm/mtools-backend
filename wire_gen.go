@@ -33,10 +33,15 @@ func BuildApp() (*App, func(), error) {
 		Logger: sugaredLogger,
 		Config: globalConfig,
 	}
+	coderHandler := &handler.CoderHandler{
+		Logger: sugaredLogger,
+		Config: globalConfig,
+	}
 	router := &Router{
 		Logger:          sugaredLogger,
 		ConfigHandler:   configHandler,
 		DatabaseHandler: databaseHandler,
+		CoderHandler:    coderHandler,
 	}
 	app := &App{
 		Router: router,
