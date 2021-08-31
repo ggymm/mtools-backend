@@ -41,8 +41,8 @@ func (r *Router) NewRouter() (router *gin.Engine) {
 		// 数据库功能
 		database := v1.Group("database/").Use(middleware.CheckUser())
 		{
-			database.GET("get-db-list", r.DatabaseHandler.GetTableList)
-			database.GET("get-table-list", r.DatabaseHandler.GetTableList)
+			database.GET("db-list", r.DatabaseHandler.GetTableList)
+			database.GET("table-list", r.DatabaseHandler.GetTableList)
 		}
 
 		// 代码生成器功能
