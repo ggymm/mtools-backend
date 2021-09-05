@@ -1,6 +1,7 @@
 .idea
 /vendor
 /log
+/db
 /conf
 
 /_build/dist

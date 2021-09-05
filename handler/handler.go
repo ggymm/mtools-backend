@@ -14,6 +14,8 @@ var SetHandler = wire.NewSet(
 	ConfigHandlerSet,
 	DatabaseHandlerSet,
 	CoderHandlerSet,
+	PostmanHandlerSet,
+	MagnetHandlerSet,
 )
 
 // ParseJSON 解析请求JSON
@@ -67,7 +69,7 @@ func validatorErrorData(err error) string {
 	case validator.ValidationErrors:
 		for _, err := range err.(validator.ValidationErrors) {
 			if err != nil {
-				s += "{" + err.Field() + "字段不符合规则}"
+				s += "[" + err.Field() + "字段不符合规则]"
 			}
 		}
 		return s

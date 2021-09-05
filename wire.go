@@ -5,8 +5,10 @@ package main
 
 import (
 	"mtools-backend/config"
+	"mtools-backend/database"
 	"mtools-backend/handler"
 	"mtools-backend/logger"
+	"mtools-backend/model"
 
 	"github.com/google/wire"
 )
@@ -14,9 +16,11 @@ import (
 // BuildApp 生成注入器
 func BuildApp() (*App, func(), error) {
 	wire.Build(
-		logger.InitLogger,
 		config.InitConfig,
+		logger.InitLogger,
+		database.InitXormDB,
 		handler.SetHandler,
+		model.SetModel,
 		RouterSet,
 		AppSet,
 	)

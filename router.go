@@ -18,6 +18,7 @@ type Router struct {
 	ConfigHandler   *handler.ConfigHandler
 	DatabaseHandler *handler.DatabaseHandler
 	CoderHandler    *handler.CoderHandler
+	PostmanHandler  *handler.PostmanHandler
 }
 
 func (r *Router) NewRouter() (router *gin.Engine) {
@@ -32,23 +33,40 @@ func (r *Router) NewRouter() (router *gin.Engine) {
 	})
 	v1 := router.Group("/api/v1/")
 	{
-		// 配置文件功能
+		// 配置文件
 		config := v1.Group("config/").Use(middleware.CheckUser())
 		{
 			config.GET("/", r.ConfigHandler.Get)
 		}
 
-		// 数据库功能
+		// 数据库
 		database := v1.Group("database/").Use(middleware.CheckUser())
 		{
-			database.GET("db-list", r.DatabaseHandler.GetTableList)
-			database.GET("table-list", r.DatabaseHandler.GetTableList)
+			database.GET("list", r.DatabaseHandler.GetDatabaseList)
+			database.GET("tableList", r.DatabaseHandler.GetTableList)
 		}
 
-		// 代码生成器功能
+		// 代码生成器
 		coder := v1.Group("coder/").Use(middleware.CheckUser())
 		{
-			coder.POST("gen-code", r.CoderHandler.GenCode)
+			coder.POST("genCode", r.CoderHandler.GenCode)
+		}
+
+		// 接口调试工具
+		postman := v1.Group("postman/")
+		{
+			collection := postman.Group("collection/").Use(middleware.CheckUser())
+			{
+				collection.GET("tree", r.PostmanHandler.GetTree)
+				collection.POST("create", r.PostmanHandler.Create)
+			}
+
+		}
+
+		// 磁力链接搜索
+		magnet := v1.Group("magnet/").Use(middleware.CheckUser())
+		{
+			magnet.GET("search", r.CoderHandler.GenCode)
 		}
 	}
 

@@ -17,9 +17,10 @@ func InitLogger() (*zap.SugaredLogger, func(), error) {
 	return db, cleanFunc, nil
 }
 
-func NewLogger() (*zap.SugaredLogger, func(), error){
+func NewLogger() (*zap.SugaredLogger, func(), error) {
 	w := zapcore.AddSync(&lumberjack.Logger{
 		Filename: "log/mtools-backend.log",
+		MaxAge:   30,
 		MaxSize:  256,
 		Compress: true,
 	})

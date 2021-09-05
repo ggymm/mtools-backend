@@ -7,12 +7,10 @@ package main
 
 import (
 	"mtools-backend/config"
+	"mtools-backend/database"
 	"mtools-backend/handler"
 	"mtools-backend/logger"
-)
-
-import (
-	_ "github.com/go-sql-driver/mysql"
+	"mtools-backend/model"
 )
 
 // Injectors from wire.go:
@@ -29,19 +27,35 @@ func BuildApp() (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	engine, cleanup2, err := database.InitXormDB()
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	databaseModel := &model.DatabaseModel{
+		DB: engine,
+	}
 	databaseHandler := &handler.DatabaseHandler{
-		Logger: sugaredLogger,
-		Config: globalConfig,
+		Logger:        sugaredLogger,
+		Config:        globalConfig,
+		DatabaseModel: databaseModel,
 	}
 	coderHandler := &handler.CoderHandler{
 		Logger: sugaredLogger,
 		Config: globalConfig,
+	}
+	postmanModel := model.PostmanModel{
+		DB: engine,
+	}
+	postmanHandler := &handler.PostmanHandler{
+		PostmanModel: postmanModel,
 	}
 	router := &Router{
 		Logger:          sugaredLogger,
 		ConfigHandler:   configHandler,
 		DatabaseHandler: databaseHandler,
 		CoderHandler:    coderHandler,
+		PostmanHandler:  postmanHandler,
 	}
 	app := &App{
 		Router: router,
@@ -49,6 +63,7 @@ func BuildApp() (*App, func(), error) {
 		Logger: sugaredLogger,
 	}
 	return app, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
