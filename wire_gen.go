@@ -41,8 +41,9 @@ func BuildApp() (*App, func(), error) {
 		DatabaseModel: databaseModel,
 	}
 	coderHandler := &handler.CoderHandler{
-		Logger: sugaredLogger,
-		Config: globalConfig,
+		Logger:        sugaredLogger,
+		Config:        globalConfig,
+		DatabaseModel: databaseModel,
 	}
 	postmanModel := model.PostmanModel{
 		DB: engine,

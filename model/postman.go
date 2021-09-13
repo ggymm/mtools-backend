@@ -19,14 +19,15 @@ type Collection struct {
 	ParentId   int    `json:"parentId" xorm:"INTEGER"`
 	ParentPath string `json:"parentPath" xorm:"TEXT"`
 	Label      string `json:"label" xorm:"TEXT"`
-	Type       string `json:"type" xorm:"TEXT"`
 	SortNo     int    `json:"sortNo" xorm:"INTEGER"`
+	Favorite   int    `json:"favorite" xorm:"INTEGER"`
 	DelFlag    int    `json:"delFlag" xorm:"INTEGER"`
 }
 
 type CollectionTree struct {
 	Collection `xorm:"extends"`
-	Children   []*CollectionTree `xorm:"-"`
+	Type       string            `json:"type" xorm:"-"`
+	Children   []*CollectionTree `json:"children" xorm:"-"`
 }
 
 func (m *CollectionTree) TableName() string {
@@ -35,7 +36,7 @@ func (m *CollectionTree) TableName() string {
 
 func (m *PostmanModel) GetTree() ([]*CollectionTree, error) {
 	list := make([]*CollectionTree, 0)
-	err := m.DB.Find(&list)
+	err := m.DB.OrderBy("sort_no").Find(&list)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +52,7 @@ func (m *PostmanModel) buildTree(list []*CollectionTree) []*CollectionTree {
 		treeItem.Id = item.Id
 		treeItem.ParentId = item.ParentId
 		treeItem.Label = item.Label
+		treeItem.Type = "collection"
 		if item.ParentId == -1 {
 			tree = append(tree, treeItem)
 		} else {
@@ -66,6 +68,7 @@ func (m *PostmanModel) Create(collectionReq *schema.CreateCollectionReq) error {
 	if err := utils.Copy(collection, collectionReq); err != nil {
 		return err
 	}
+	collection.DelFlag = 1
 	if insert, err := m.DB.Insert(collection); err != nil {
 		return err
 	} else {

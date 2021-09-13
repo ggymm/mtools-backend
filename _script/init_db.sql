@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS "collection"
     "parent_id"   INTEGER,
     "parent_path" TEXT,
     "label"       TEXT,
-    "type"        TEXT,
     "sort_no"     INTEGER,
+    "favorite"    INTEGER,
     "del_flag"    INTEGER
 );
 PRAGMA foreign_keys = true;

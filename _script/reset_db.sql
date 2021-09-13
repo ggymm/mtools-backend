@@ -27,3 +27,10 @@ FROM collection;
 DELETE
 FROM sqlite_sequence
 WHERE name = 'collection';
+
+DELETE
+FROM request;
+
+DELETE
+FROM sqlite_sequence
+WHERE name = 'request';
