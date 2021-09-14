@@ -32,7 +32,7 @@ type CoderHandler struct {
 	Fields        []*Field
 }
 
-func (h *CoderHandler) GenCode(c *gin.Context) {
+func (h *CoderHandler) GenJavaCode(c *gin.Context) {
 	h.conf = new(schema.GenCode)
 	if err := ParseJSON(c, &h.conf); err != nil {
 		returnFailed(c, validatorErrorData(err))
@@ -55,7 +55,7 @@ func (h *CoderHandler) GenCode(c *gin.Context) {
 		}
 
 		// 获取需要生成的文件列表
-		files := h.genFiles()
+		files := h.javaFiles()
 		for _, file := range files {
 
 			smallCamelTable := tpl.SmallCamel(table)
@@ -148,6 +148,11 @@ func (h *CoderHandler) GenCode(c *gin.Context) {
 	return
 }
 
+func (h *CoderHandler) GenGoCode(c *gin.Context) {
+	returnSuccess(c, nil)
+	return
+}
+
 type Field struct {
 	ColumnName             string         `db:"COLUMN_NAME"`
 	ColumnDefault          sql.NullString `db:"COLUMN_DEFAULT"`
@@ -166,26 +171,6 @@ type Field struct {
 	AutoFillType           string
 }
 
-type GenFile struct {
-	Key      string
-	Path     string
-	Suffix   string
-	Template string
-}
-
-func (h *CoderHandler) genFiles() (files []*GenFile) {
-	files = make([]*GenFile, 0)
-	files = append(files, &GenFile{Key: "Controller", Path: "controller", Suffix: "Controller.java", Template: tpl.ControllerTemplate})
-	files = append(files, &GenFile{Key: "Service", Path: "service", Suffix: "Service.java", Template: tpl.ServiceTemplate})
-	files = append(files, &GenFile{Key: "Mapper", Path: "mapper", Suffix: "Mapper.java", Template: tpl.MapperTemplate})
-	files = append(files, &GenFile{Key: "MapperXml", Path: "mapper/xml", Suffix: "Mapper.xml", Template: tpl.MapperXmlTemplate})
-	files = append(files, &GenFile{Key: "Entity", Path: "entity", Suffix: ".java", Template: tpl.EntityTemplate})
-	if h.conf.GenFrontEnd {
-		// files = append(files, &GenFile{Key: "Vue", Path: "vue/views", Suffix: ".vue", Template: tpl.VueTemplate})
-	}
-	return
-}
-
 func (h *CoderHandler) getFields(conf *model.Database, tableName string) ([]*Field, error) {
 	var (
 		fieldList []*Field
@@ -198,6 +183,9 @@ func (h *CoderHandler) getFields(conf *model.Database, tableName string) ([]*Fie
 	}
 	dbUrl += conf.Name + "?charset=utf8&parseTime=True&loc=Local"
 	db, _ := sqlx.Open("mysql", dbUrl)
+	defer func() {
+		_ = db.Close()
+	}()
 	if err := db.Select(&fieldList, config.QueryTableFieldList, tableName, conf.Name); err != nil {
 		return fieldList, err
 	}
@@ -220,4 +208,34 @@ func (h *CoderHandler) IDType() string {
 		}
 	}
 	return ""
+}
+
+type GenFile struct {
+	Key      string
+	Path     string
+	Suffix   string
+	Template string
+}
+
+func (h *CoderHandler) javaFiles() (files []*GenFile) {
+	files = make([]*GenFile, 0)
+	files = append(files, &GenFile{Key: "Controller", Path: "controller", Suffix: "Controller.java", Template: tpl.ControllerTemplate})
+	files = append(files, &GenFile{Key: "Service", Path: "service", Suffix: "Service.java", Template: tpl.ServiceTemplate})
+	files = append(files, &GenFile{Key: "Mapper", Path: "mapper", Suffix: "Mapper.java", Template: tpl.MapperTemplate})
+	files = append(files, &GenFile{Key: "MapperXml", Path: "mapper/xml", Suffix: "Mapper.xml", Template: tpl.MapperXmlTemplate})
+	files = append(files, &GenFile{Key: "Entity", Path: "entity", Suffix: ".java", Template: tpl.EntityTemplate})
+	if h.conf.GenFrontEnd {
+		// files = append(files, &GenFile{Key: "Vue", Path: "vue/views", Suffix: ".vue", Template: tpl.VueTemplate})
+	}
+	return
+}
+
+func (h *CoderHandler) goFiles() (files []*GenFile) {
+	files = make([]*GenFile, 0)
+	files = append(files, &GenFile{Key: "Handler", Path: "handler", Suffix: ".go", Template: tpl.HandlerTemplate})
+	files = append(files, &GenFile{Key: "Model", Path: "model", Suffix: ".go", Template: tpl.ModelTemplate})
+	if h.conf.GenFrontEnd {
+		// files = append(files, &GenFile{Key: "Vue", Path: "vue/views", Suffix: ".vue", Template: tpl.VueTemplate})
+	}
+	return
 }

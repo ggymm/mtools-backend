@@ -49,7 +49,8 @@ func (r *Router) NewRouter() (router *gin.Engine) {
 		// 代码生成器
 		coder := v1.Group("coder/").Use(middleware.CheckUser())
 		{
-			coder.POST("genCode", r.CoderHandler.GenCode)
+			coder.POST("generateJavaCode", r.CoderHandler.GenJavaCode)
+			coder.POST("generateGoCode", r.CoderHandler.GenGoCode)
 		}
 
 		// 接口调试工具
@@ -66,7 +67,7 @@ func (r *Router) NewRouter() (router *gin.Engine) {
 		// 磁力链接搜索
 		magnet := v1.Group("magnet/").Use(middleware.CheckUser())
 		{
-			magnet.GET("search", r.CoderHandler.GenCode)
+			magnet.GET("search", r.CoderHandler.GenJavaCode)
 		}
 	}
 

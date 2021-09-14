@@ -8,14 +8,21 @@ var (
 )
 
 var (
-	//go:embed service/controller.tpl
+	//go:embed java/controller.tpl
 	ControllerTemplate string
-	//go:embed service/service.tpl
+	//go:embed java/service.tpl
 	ServiceTemplate string
-	//go:embed service/mapper.tpl
+	//go:embed java/mapper.tpl
 	MapperTemplate string
-	//go:embed service/mapper_xml.tpl
+	//go:embed java/mapper_xml.tpl
 	MapperXmlTemplate string
-	//go:embed service/entity.tpl
+	//go:embed java/entity.tpl
 	EntityTemplate string
+)
+
+var (
+	//go:embed go/handler.tpl
+	HandlerTemplate string
+	//go:embed go/model.tpl
+	ModelTemplate string
 )
