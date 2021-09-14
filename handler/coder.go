@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"mtools-backend/config"
 	"mtools-backend/model"
@@ -27,40 +28,41 @@ type CoderHandler struct {
 	Logger        *zap.SugaredLogger
 	Config        *config.GlobalConfig
 	DatabaseModel *model.DatabaseModel
+	conf          *schema.GenCode
+	Fields        []*Field
 }
 
 func (h *CoderHandler) GenCode(c *gin.Context) {
-	conf := new(schema.GenCode)
-	if err := ParseJSON(c, &conf); err != nil {
+	h.conf = new(schema.GenCode)
+	if err := ParseJSON(c, &h.conf); err != nil {
 		returnFailed(c, validatorErrorData(err))
 		return
 	}
 
 	// 获取数据库信息
-	dbConf, err := h.DatabaseModel.Get(conf.DatabaseId)
+	dbConf, err := h.DatabaseModel.Get(h.conf.DatabaseId)
 	if err != nil {
 		returnFailed(c, err.Error())
 		return
 	}
 
 	// 遍历tables
-	for _, table := range conf.Tables {
+	for _, table := range h.conf.Tables {
 		// 查询字段列表
-		fields, err := h.getFields(dbConf, table)
-		if err != nil {
+		if h.Fields, err = h.getFields(dbConf, table); err != nil {
 			h.Logger.Errorf("获取%s表, 字段出现错误: %v", table, err)
 			continue
 		}
 
 		// 获取需要生成的文件列表
-		files := h.genFiles(conf.GenFrontEnd)
+		files := h.genFiles()
 		for _, file := range files {
 
 			smallCamelTable := tpl.SmallCamel(table)
 			bigCamelTable := tpl.BigCamel(table)
 
-			filePath := filepath.Join(conf.Output, utils.IfStr(conf.UseOriginTable, table, smallCamelTable),
-				file.Path, utils.IfStr(conf.UseOriginTable, table, bigCamelTable)+file.Suffix)
+			filePath := filepath.Join(h.conf.Output, utils.IfStr(h.conf.UseOriginTable, table, smallCamelTable),
+				file.Path, utils.IfStr(h.conf.UseOriginTable, table, bigCamelTable)+file.Suffix)
 			fileContent := bytes.NewBufferString("")
 
 			// 构造模板
@@ -70,32 +72,32 @@ func (h *CoderHandler) GenCode(c *gin.Context) {
 				continue
 			}
 
-			if conf.UseParent {
-				columns := conf.ExcludeColumn
+			if h.conf.UseParent {
+				columns := h.conf.ExcludeColumn
 				excludes := strings.Split(columns, ",")
 
 				// 如果使用父类，那么会有字段需要排除
-				for i := 0; i < len(fields); i++ {
+				for i := 0; i < len(h.Fields); i++ {
 					for j := 0; j < len(excludes); j++ {
-						if fields[i].ColumnName == excludes[j] {
-							fields[i].Exclude = true
+						if h.Fields[i].ColumnName == excludes[j] {
+							h.Fields[i].Exclude = true
 						}
 					}
 				}
 			} else {
 				// 如果不使用父类
 				// 需要判断是否有字段需要自动填充
-				if conf.AutoFill {
-					columns := conf.AutoFillColumn
+				if h.conf.AutoFill {
+					columns := h.conf.AutoFillColumn
 					autoFills := strings.Split(columns, ",")
-					for i := 0; i < len(fields); i++ {
+					for i := 0; i < len(h.Fields); i++ {
 						for j := 0; j < len(autoFills); j++ {
-							if fields[i].ColumnName == autoFills[j] {
-								fields[i].AutoFill = true
+							if h.Fields[i].ColumnName == autoFills[j] {
+								h.Fields[i].AutoFill = true
 								if strings.Contains(autoFills[j], "update") {
-									fields[i].AutoFillType = "INSERT_UPDATE"
+									h.Fields[i].AutoFillType = "INSERT_UPDATE"
 								} else {
-									fields[i].AutoFillType = "INSERT"
+									h.Fields[i].AutoFillType = "INSERT"
 								}
 							}
 						}
@@ -103,29 +105,34 @@ func (h *CoderHandler) GenCode(c *gin.Context) {
 				}
 			}
 
-			if conf.FormatDateColumn {
-				for i := 0; i < len(fields); i++ {
-					if fields[i].DataType == "datetime" {
-						fields[i].FormatDate = true
+			if h.conf.FormatDateColumn {
+				for i := 0; i < len(h.Fields); i++ {
+					if h.Fields[i].DataType == "datetime" {
+						h.Fields[i].FormatDate = true
 					}
 				}
 			}
 
 			// 生成代码
 			if err = tmpl.Execute(fileContent, map[string]interface{}{
-				"PackageName":     utils.IfStr(conf.UseOriginTable, table, smallCamelTable),
-				"TableName":       utils.IfStr(conf.UseOriginTable, table, bigCamelTable),
+				"Author":          utils.GetUsername(),
+				"Now":             time.Now().Format("2006-01-02 15:04:05"),
+				"BasePackageName": h.conf.Package,
+				"PackageName":     utils.IfStr(h.conf.UseOriginTable, table, smallCamelTable),
+				"TableName":       utils.IfStr(h.conf.UseOriginTable, table, bigCamelTable),
 				"OriginTableName": table,
-				"Fields":          fields,
-				"UseParent":       conf.UseParent,
-				"ParentPackage":   conf.ParentPackage,
-				"UseOriginColumn": conf.UseOriginColumn,
+				"Fields":          h.Fields,
+				"HasID":           h.hasID(),
+				"IDType":          h.IDType(),
+				"UseParent":       h.conf.UseParent,
+				"ParentPackage":   h.conf.ParentPackage,
+				"UseOriginColumn": h.conf.UseOriginColumn,
 			}); err != nil {
 				h.Logger.Errorf("表 [%s], 生成代码失败 %v", table, err)
 				continue
 			}
 
-			if conf.OutputCover {
+			if h.conf.OutputCover {
 				_ = os.Remove(filePath)
 			}
 
@@ -166,14 +173,14 @@ type GenFile struct {
 	Template string
 }
 
-func (h *CoderHandler) genFiles(hasWeb bool) (files []*GenFile) {
+func (h *CoderHandler) genFiles() (files []*GenFile) {
 	files = make([]*GenFile, 0)
-	// files = append(files, &GenFile{Key: "Controller", Path: "controller", Suffix: "Controller.java", Template: tpl.ControllerTemplate})
-	// files = append(files, &GenFile{Key: "Service", Path: "service", Suffix: "Service.java", Template: tpl.ServiceTemplate})
-	// files = append(files, &GenFile{Key: "Mapper", Path: "mapper", Suffix: "Mapper.java", Template: tpl.MapperTemplate})
-	// files = append(files, &GenFile{Key: "MapperXml", Path: "mapper/xml", Suffix: "Mapper.xml", Template: tpl.MapperXmlTemplate})
+	files = append(files, &GenFile{Key: "Controller", Path: "controller", Suffix: "Controller.java", Template: tpl.ControllerTemplate})
+	files = append(files, &GenFile{Key: "Service", Path: "service", Suffix: "Service.java", Template: tpl.ServiceTemplate})
+	files = append(files, &GenFile{Key: "Mapper", Path: "mapper", Suffix: "Mapper.java", Template: tpl.MapperTemplate})
+	files = append(files, &GenFile{Key: "MapperXml", Path: "mapper/xml", Suffix: "Mapper.xml", Template: tpl.MapperXmlTemplate})
 	files = append(files, &GenFile{Key: "Entity", Path: "entity", Suffix: ".java", Template: tpl.EntityTemplate})
-	if hasWeb {
+	if h.conf.GenFrontEnd {
 		// files = append(files, &GenFile{Key: "Vue", Path: "vue/views", Suffix: ".vue", Template: tpl.VueTemplate})
 	}
 	return
@@ -195,4 +202,22 @@ func (h *CoderHandler) getFields(conf *model.Database, tableName string) ([]*Fie
 		return fieldList, err
 	}
 	return fieldList, nil
+}
+
+func (h *CoderHandler) hasID() bool {
+	for _, field := range h.Fields {
+		if field.IsKey == "TRUE" {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *CoderHandler) IDType() string {
+	for _, field := range h.Fields {
+		if field.IsKey == "TRUE" {
+			return tpl.FormatJavaDataType(field.DataType)
+		}
+	}
+	return ""
 }

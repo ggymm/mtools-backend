@@ -21,7 +21,7 @@ const (
 	// Denotes that a destination field must be copied to. If copying fails then a panic will ensue.
 	tagMust uint8 = 1 << iota
 
-	// Denotes that the program should not panic when the must flag is on and
+	// Denotes that the program should not panic when they must flag is on and
 	// value is not copied. The program will return an error instead.
 	tagNoPanic
 
@@ -40,7 +40,7 @@ type Option struct {
 	DeepCopy    bool
 }
 
-// Copy copy things
+// Copy is copy things
 func Copy(toValue interface{}, fromValue interface{}) (err error) {
 	return copier(toValue, fromValue, Option{})
 }
@@ -266,7 +266,7 @@ func copier(toValue interface{}, fromValue interface{}, opt Option) (err error) 
 				}
 			}
 
-			// Copy from from method to dest field
+			// Copy from method to dest field
 			for _, field := range deepFields(toType) {
 				name := field.Name
 
@@ -374,7 +374,7 @@ func set(to, from reflect.Value, deepCopy bool) bool {
 						return true
 					}
 				}
-				// allocate new `to` variable with default value (eg. *string -> new(string))
+				// allocate new `to` variable with default value (e.g. *string -> new(string))
 				to.Set(reflect.New(to.Type().Elem()))
 			}
 			// depointer `to`

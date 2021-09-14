@@ -29,7 +29,7 @@ func (m *Database) TableName() string {
 
 func (m *DatabaseModel) GetList() ([]*Database, error) {
 	dbList := make([]*Database, 0)
-	err := m.DB.Find(&dbList)
+	err := m.DB.Select("id, show_name").Find(&dbList)
 	if err != nil {
 		return nil, err
 	}

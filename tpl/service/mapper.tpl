@@ -1,9 +1,9 @@
-package com.ninelock.api.${.PackageName}.mapper;
+package ${.BasePackageName}.${.PackageName}.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.ninelock.api.${.PackageName}.entity.${.TableName | formatBigCamel};
-import org.apache.ibatis.annotations.Mapper;
-
-/** @author ninelock-ai */
-@Mapper
-public interface ${.TableName | formatBigCamel}Mapper extends BaseMapper<${.TableName | formatBigCamel}> {}
+/**
+ * @author ${.Author}
+ * @version 创建时间: ${.Now}
+ */
+@org.apache.ibatis.annotations.Mapper
+public interface ${.TableName}Mapper extends com.baomidou.mybatisplus.core.mapper.BaseMapper<${.BasePackageName}.${.PackageName}.entity.${.TableName}> {
+}

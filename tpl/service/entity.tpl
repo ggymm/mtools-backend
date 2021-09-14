@@ -1,5 +1,9 @@
-package com.ninelock.api.${.PackageName}.entity;
+package ${.BasePackageName}.${.PackageName}.entity;
 
+/**
+ * @author ${.Author}
+ * @version 创建时间: ${.Now}
+ */
 @lombok.Data
 @com.baomidou.mybatisplus.annotation.TableName("${.OriginTableName}")${if .UseParent}
 @lombok.EqualsAndHashCode(callSuper = false)${- end}
