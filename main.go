@@ -18,7 +18,7 @@ func main() {
 	}
 	router := app.Router.NewRouter()
 	go func() {
-		_ = router.Run(app.Config.App.Addr)
+		_ = router.Run("44966")
 	}()
 
 EXIT:

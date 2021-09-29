@@ -39,7 +39,7 @@ func NewXormDB() (*xorm.Engine, func(), error) {
 		engine.Logger().SetLevel(log.LOG_DEBUG)
 
 		// 初始化数据库
-		_, err := engine.ImportFile("_script/init_db.sql")
+		_, err := engine.ImportFile("_script/db/init_db.sql")
 		if err != nil {
 			return nil, nil, err
 		}

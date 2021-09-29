@@ -5,6 +5,7 @@ type GenCode struct {
 	Tables     []string `json:"tables" binding:"required"`
 
 	OutputCover bool `json:"outputCover"`
+	OnlyEntity  bool `json:"onlyEntity"`
 
 	UseLombok bool `json:"useLombok"`
 	UseParent bool `json:"useParent"`

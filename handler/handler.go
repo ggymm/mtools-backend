@@ -11,12 +11,20 @@ import (
 )
 
 var SetHandler = wire.NewSet(
-	ConfigHandlerSet,
 	DatabaseHandlerSet,
 	CoderHandlerSet,
 	PostmanHandlerSet,
 	MagnetHandlerSet,
 )
+
+const QueryTableListSQL = `SELECT DISTINCT TABLE_NAME, TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?`
+
+const QueryTableFieldList = `SELECT COLUMN_NAME, COLUMN_DEFAULT, DATA_TYPE, COLUMN_COMMENT
+	, IF(COLUMN_KEY = 'PRI', 'TRUE', 'FALSE') AS IS_KEY
+	, NUMERIC_PRECISION, NUMERIC_SCALE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE
+	, UPPER(COLUMN_TYPE) AS COLUMN_TYPE
+	, IF(EXTRA = 'auto_increment', 'TRUE', 'FALSE') AS IS_AUTO
+FROM information_schema.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?`
 
 // ParseJSON 解析请求JSON
 func ParseJSON(c *gin.Context, obj interface{}) error {

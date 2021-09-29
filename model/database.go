@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+
 	"github.com/google/wire"
 	"xorm.io/xorm"
 )

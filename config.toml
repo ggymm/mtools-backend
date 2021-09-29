@@ -1,5 +1,0 @@
-[app]
-addr = ":44966"
-
-[coder]
-config_folder = "conf"

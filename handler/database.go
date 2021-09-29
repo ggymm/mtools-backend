@@ -3,21 +3,20 @@ package handler
 import (
 	"database/sql"
 	"go.uber.org/zap"
+	"strings"
+
 	"mtools-backend/model"
 	"mtools-backend/schema"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
-	"mtools-backend/config"
 )
 
 var DatabaseHandlerSet = wire.NewSet(wire.Struct(new(DatabaseHandler), "*"))
 
 type DatabaseHandler struct {
 	Logger        *zap.SugaredLogger
-	Config        *config.GlobalConfig
 	DatabaseModel *model.DatabaseModel
 }
 
@@ -76,7 +75,7 @@ func (h *DatabaseHandler) getTableList(c *model.Database) (error, []table) {
 	defer func() {
 		_ = db.Close()
 	}()
-	if err := db.Select(&tableMapList, config.QueryTableListSQL, c.Name); err != nil {
+	if err := db.Select(&tableMapList, QueryTableListSQL, c.Name); err != nil {
 		return err, tableMapList
 	}
 	return nil, tableMapList

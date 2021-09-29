@@ -15,7 +15,6 @@ var RouterSet = wire.NewSet(wire.Struct(new(Router), "*"))
 
 type Router struct {
 	Logger          *zap.SugaredLogger
-	ConfigHandler   *handler.ConfigHandler
 	DatabaseHandler *handler.DatabaseHandler
 	CoderHandler    *handler.CoderHandler
 	PostmanHandler  *handler.PostmanHandler
@@ -28,17 +27,12 @@ func (r *Router) NewRouter() (router *gin.Engine) {
 	router.Use(middleware.Cors())
 	router.Use(middleware.ErrHandler(r.Logger))
 
+	// router.StaticFS("/drawio", http.Dir("drawio"))
 	router.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "start success")
 	})
 	v1 := router.Group("/api/v1/")
 	{
-		// 配置文件
-		config := v1.Group("config/").Use(middleware.CheckUser())
-		{
-			config.GET("/", r.ConfigHandler.Get)
-		}
-
 		// 数据库
 		database := v1.Group("database/").Use(middleware.CheckUser())
 		{
@@ -63,6 +57,8 @@ func (r *Router) NewRouter() (router *gin.Engine) {
 			}
 
 		}
+
+		// oss管理
 
 		// 磁力链接搜索
 		magnet := v1.Group("magnet/").Use(middleware.CheckUser())

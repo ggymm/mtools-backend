@@ -2,6 +2,9 @@
 /vendor
 /log
 /db
-/conf
 
-/_build/dist
+/_build/release
+
+/drawio
+
+oss_key

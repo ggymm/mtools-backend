@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"database/sql"
 	"io/ioutil"
-	"mtools-backend/utils"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
 
-	"mtools-backend/config"
 	"mtools-backend/model"
 	"mtools-backend/schema"
 	"mtools-backend/tpl"
+	"mtools-backend/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -26,10 +25,9 @@ var CoderHandlerSet = wire.NewSet(wire.Struct(new(CoderHandler), "*"))
 
 type CoderHandler struct {
 	Logger        *zap.SugaredLogger
-	Config        *config.GlobalConfig
 	DatabaseModel *model.DatabaseModel
-	conf          *schema.GenCode
-	Fields        []*Field
+	conf          *schema.GenCode `wire:"-"`
+	Fields        []*Field        `wire:"-"`
 }
 
 func (h *CoderHandler) GenJavaCode(c *gin.Context) {
@@ -174,22 +172,27 @@ type Field struct {
 func (h *CoderHandler) getFields(conf *model.Database, tableName string) ([]*Field, error) {
 	var (
 		fieldList []*Field
-		dbUrl     = conf.Username + ":" + conf.Password + "@tcp("
+		dbUrl     string
 	)
-	if strings.Contains(conf.Host, ":") {
-		dbUrl += conf.Host + ")/"
+	if conf.Driver == "mysql" {
+		dbUrl = conf.Username + ":" + conf.Password + "@tcp("
+		if strings.Contains(conf.Host, ":") {
+			dbUrl += conf.Host + ")/"
+		} else {
+			dbUrl += conf.Host + ":3306)/"
+		}
+		dbUrl += conf.Name + "?charset=utf8&parseTime=True&loc=Local"
+		db, _ := sqlx.Open("mysql", dbUrl)
+		defer func() {
+			_ = db.Close()
+		}()
+		if err := db.Select(&fieldList, QueryTableFieldList, tableName, conf.Name); err != nil {
+			return fieldList, err
+		}
+		return fieldList, nil
 	} else {
-		dbUrl += conf.Host + ":3306)/"
+		return fieldList, nil
 	}
-	dbUrl += conf.Name + "?charset=utf8&parseTime=True&loc=Local"
-	db, _ := sqlx.Open("mysql", dbUrl)
-	defer func() {
-		_ = db.Close()
-	}()
-	if err := db.Select(&fieldList, config.QueryTableFieldList, tableName, conf.Name); err != nil {
-		return fieldList, err
-	}
-	return fieldList, nil
 }
 
 func (h *CoderHandler) hasID() bool {
@@ -219,8 +222,10 @@ type GenFile struct {
 
 func (h *CoderHandler) javaFiles() (files []*GenFile) {
 	files = make([]*GenFile, 0)
-	files = append(files, &GenFile{Key: "Controller", Path: "controller", Suffix: "Controller.java", Template: tpl.ControllerTemplate})
-	files = append(files, &GenFile{Key: "Service", Path: "service", Suffix: "Service.java", Template: tpl.ServiceTemplate})
+	if !h.conf.OnlyEntity {
+		files = append(files, &GenFile{Key: "Controller", Path: "controller", Suffix: "Controller.java", Template: tpl.ControllerTemplate})
+		files = append(files, &GenFile{Key: "Service", Path: "service", Suffix: "Service.java", Template: tpl.ServiceTemplate})
+	}
 	files = append(files, &GenFile{Key: "Mapper", Path: "mapper", Suffix: "Mapper.java", Template: tpl.MapperTemplate})
 	files = append(files, &GenFile{Key: "MapperXml", Path: "mapper/xml", Suffix: "Mapper.xml", Template: tpl.MapperXmlTemplate})
 	files = append(files, &GenFile{Key: "Entity", Path: "entity", Suffix: ".java", Template: tpl.EntityTemplate})

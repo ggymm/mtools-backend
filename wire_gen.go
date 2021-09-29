@@ -6,7 +6,6 @@
 package main
 
 import (
-	"mtools-backend/config"
 	"mtools-backend/database"
 	"mtools-backend/handler"
 	"mtools-backend/logger"
@@ -21,12 +20,6 @@ func BuildApp() (*App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	configHandler := &handler.ConfigHandler{}
-	globalConfig, err := config.InitConfig()
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
 	engine, cleanup2, err := database.InitXormDB()
 	if err != nil {
 		cleanup()
@@ -37,12 +30,10 @@ func BuildApp() (*App, func(), error) {
 	}
 	databaseHandler := &handler.DatabaseHandler{
 		Logger:        sugaredLogger,
-		Config:        globalConfig,
 		DatabaseModel: databaseModel,
 	}
 	coderHandler := &handler.CoderHandler{
 		Logger:        sugaredLogger,
-		Config:        globalConfig,
 		DatabaseModel: databaseModel,
 	}
 	postmanModel := model.PostmanModel{
@@ -53,14 +44,12 @@ func BuildApp() (*App, func(), error) {
 	}
 	router := &Router{
 		Logger:          sugaredLogger,
-		ConfigHandler:   configHandler,
 		DatabaseHandler: databaseHandler,
 		CoderHandler:    coderHandler,
 		PostmanHandler:  postmanHandler,
 	}
 	app := &App{
 		Router: router,
-		Config: globalConfig,
 		Logger: sugaredLogger,
 	}
 	return app, func() {

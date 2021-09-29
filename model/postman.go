@@ -2,9 +2,11 @@ package model
 
 import (
 	"fmt"
-	"github.com/google/wire"
+
 	"mtools-backend/schema"
 	"mtools-backend/utils"
+
+	"github.com/google/wire"
 	"xorm.io/xorm"
 )
 
