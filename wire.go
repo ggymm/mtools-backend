@@ -13,7 +13,7 @@ import (
 )
 
 // BuildApp 生成注入器
-func BuildApp() (*App, func(), error) {
+func BuildApp(appPath string) (*App, func(), error) {
 	wire.Build(
 		logger.InitLogger,
 		database.InitXormDB,

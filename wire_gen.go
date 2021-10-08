@@ -15,12 +15,12 @@ import (
 // Injectors from wire.go:
 
 // BuildApp 生成注入器
-func BuildApp() (*App, func(), error) {
-	sugaredLogger, cleanup, err := logger.InitLogger()
+func BuildApp(appPath string) (*App, func(), error) {
+	sugaredLogger, cleanup, err := logger.InitLogger(appPath)
 	if err != nil {
 		return nil, nil, err
 	}
-	engine, cleanup2, err := database.InitXormDB()
+	engine, cleanup2, err := database.InitXormDB(appPath)
 	if err != nil {
 		cleanup()
 		return nil, nil, err

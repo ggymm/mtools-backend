@@ -1,10 +1,10 @@
 .idea
 /vendor
 /log
-/db
 
 /_build/release
 
 /drawio
 
 oss_key
+mtools-backend.db

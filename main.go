@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,13 +13,17 @@ func main() {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	app, cleanFunc, err := BuildApp()
+	var appPath string
+	flag.StringVar(&appPath, "app-path", "", "")
+	flag.Parse()
+
+	app, cleanFunc, err := BuildApp(appPath)
 	if err != nil {
 		panic(err)
 	}
 	router := app.Router.NewRouter()
 	go func() {
-		_ = router.Run("44966")
+		_ = router.Run(":44966")
 	}()
 
 EXIT:

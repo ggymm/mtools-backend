@@ -10,16 +10,16 @@ import (
 	"xorm.io/xorm/log"
 )
 
-func InitXormDB() (*xorm.Engine, func(), error) {
-	db, cleanFunc, err := NewXormDB()
+func InitXormDB(appPath string) (*xorm.Engine, func(), error) {
+	db, cleanFunc, err := NewXormDB(appPath)
 	if err != nil {
 		return nil, cleanFunc, err
 	}
 	return db, cleanFunc, nil
 }
 
-func NewXormDB() (*xorm.Engine, func(), error) {
-	if engine, err := xorm.NewEngine("sqlite", "db/mtools-backend.db"); err != nil {
+func NewXormDB(appPath string) (*xorm.Engine, func(), error) {
+	if engine, err := xorm.NewEngine("sqlite", appPath+"mtools-backend.db"); err != nil {
 		return nil, nil, err
 	} else {
 		engine.SetTableMapper(core.SnakeMapper{})
@@ -29,7 +29,7 @@ func NewXormDB() (*xorm.Engine, func(), error) {
 
 		// 日志输出
 		fWriter := &lumberjack.Logger{
-			Filename: "log/mtools-backend.database.log",
+			Filename: appPath + "log/mtools-backend.database.log",
 			MaxAge:   30,
 			MaxSize:  256,
 			Compress: true,
@@ -39,10 +39,9 @@ func NewXormDB() (*xorm.Engine, func(), error) {
 		engine.Logger().SetLevel(log.LOG_DEBUG)
 
 		// 初始化数据库
-		_, err := engine.ImportFile("_script/db/init_db.sql")
-		if err != nil {
-			return nil, nil, err
-		}
+		//if _, err := engine.ImportFile("_script/db/init_db.sql"); err != nil {
+		//	return nil, nil, err
+		//}
 		cleanFunc := func() {
 			_ = engine.Close()
 		}

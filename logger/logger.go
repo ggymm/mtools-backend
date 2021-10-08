@@ -9,17 +9,17 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func InitLogger() (*zap.SugaredLogger, func(), error) {
-	db, cleanFunc, err := NewLogger()
+func InitLogger(appPath string) (*zap.SugaredLogger, func(), error) {
+	db, cleanFunc, err := NewLogger(appPath)
 	if err != nil {
 		return nil, cleanFunc, err
 	}
 	return db, cleanFunc, nil
 }
 
-func NewLogger() (*zap.SugaredLogger, func(), error) {
+func NewLogger(appPath string) (*zap.SugaredLogger, func(), error) {
 	w := zapcore.AddSync(&lumberjack.Logger{
-		Filename: "log/mtools-backend.log",
+		Filename: appPath + "log/mtools-backend.log",
 		MaxAge:   30,
 		MaxSize:  256,
 		Compress: true,
